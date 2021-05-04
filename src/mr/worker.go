@@ -8,6 +8,9 @@ import (
 	"time"
 )
 
+
+var workerID int = -1
+
 //
 // Map functions return a slice of KeyValue.
 //
@@ -33,6 +36,7 @@ func Worker(mapf func(string, string) []KeyValue,
 	reducef func(string, []string) string) {
 
 	for true {
+		
 		fmt.Println("Infinite Loop")
 		applyTask()
 		time.Sleep(time.Second)
@@ -41,14 +45,26 @@ func Worker(mapf func(string, string) []KeyValue,
 }
 
 func applyTask() {
-	resquest := TaskApplyReq{}
+	resquest := TaskApplyReq{
+		WorkerID: workerID,
+	}
 	reply := TaskApplyRes{}
 
 	call("Coordinator.ApplyForTask", &resquest, &reply)
+	if workerID == -1 {
+		workerID = reply.WorkerID
+	}
 
 	// reply.Y should be 100.
 	fmt.Printf("reply.taskId %v\n", reply.TaskId)
 }
+
+
+
+
+
+
+
 
 //
 // send an RPC request to the coordinator, wait for the response.
