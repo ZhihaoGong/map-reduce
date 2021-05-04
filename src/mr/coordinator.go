@@ -14,45 +14,22 @@ import (
 // Coordinator manages map/reduce tasks and workers
 //
 type Coordinator struct {
-	workerCol           map[int]*worker
 	nextWorkerID		int
-	// taskCol             map[int]task
-	// taskToWorkerMapping map[int]int
-
-	InitedTasks			map[int]task 
-	MappingTasks		map[int]task 
-	MappedTasks			map[int]task 
-	ReducingTasks		map[int]task
-	ReducedTasks		map[int]task 
-
+	workerCol           map[int]*WorkerInfo
 	workerColLock		sync.Mutex
-}
+	// taskCol             map[int]task
 
-type WorkerStatus int
+	mapTasks             map[int]*TaskInfo
+	reduceTasks          map[int]*TaskInfo
+	taskToWorkerMapping		map[int]int
 
-const (
-	IdleWorker WorkerStatus = iota
-    MapWorker
-    ReduceWorker
-)
+	nReduce				int
+	// InitedTasks			map[int]*TaskInfo 
+	// MappingTasks		map[int]*TaskInfo 
+	// MappedTasks			map[int]*TaskInfo 
+	// ReducingTasks		map[int]*TaskInfo
+	// ReducedTasks		map[int]*TaskInfo 
 
-
-func (ws WorkerStatus) String() string {
-    return [...]string{"Idle", "Map", "Reduce"}[ws]
-}
-
-type worker struct {
-	id            	int
-	status        	WorkerStatus
-	taskID			int
-	lastHeartBeart	int
-}
-
-
-type task struct {
-	id     int
-	fileLocation string
-	
 }
 
 //
@@ -62,7 +39,7 @@ func (c *Coordinator) ApplyForTask(request *TaskApplyReq, reply *TaskApplyRes) e
 	workerID := request.WorkerID
 	c.renewHeartBeat(workerID, reply)
 
-	reply.TaskId = 100
+	// reply.TaskId = 100
 	return nil
 }
 
@@ -91,7 +68,7 @@ func (c *Coordinator) heartBeatCheck() {
 			expireWorkers := []int{}
 			c.workerColLock.Lock()
 			for workerID, worker := range c.workerCol{
-				if worker.lastHeartBeart + 10 < int(time.Now().Unix()) {
+				if worker.lastHeartBeart + 10 < time.Now().Unix() {
 					fmt.Println("eeeee", workerID)
 					expireWorkers = append(expireWorkers, workerID)
 					fmt.Println("eeeee", expireWorkers)
@@ -115,15 +92,15 @@ func (c *Coordinator) renewHeartBeat(workerID int, reply *TaskApplyRes) {
 		// a new worker
 		workerID = c.getNextWorkerID()
 		reply.WorkerID = workerID
-		c.workerCol[workerID] = &worker{
+		c.workerCol[workerID] = &WorkerInfo{
 			id: workerID,
 			status: IdleWorker,
-			lastHeartBeart: int(time.Now().Unix()),
+			lastHeartBeart: time.Now().Unix(),
 		}
 	}
 
 	worker := c.workerCol[workerID]
-	worker.lastHeartBeart = int(time.Now().Unix())
+	worker.lastHeartBeart = time.Now().Unix()
 	fmt.Println("22222")
 	for k, v := range c.workerCol {
 		fmt.Println(k, *v)
@@ -145,30 +122,48 @@ func (c *Coordinator) Done() bool {
 // MakeCoordinator create a Coordinator
 //
 func MakeCoordinator(files []string, nReduce int) *Coordinator {
-	c := Coordinator{}
+	c := Coordinator{
+		nReduce: nReduce,
+	}
 
 	// Your code here.
 	// initalization
-	c.workerCol = make(map[int]*worker)
+	c.workerCol = make(map[int]*WorkerInfo)
 
-	c.InitedTasks = make(map[int]task)
-	c.MappingTasks = make(map[int]task)
-	c.MappedTasks = make(map[int]task)
-	c.ReducingTasks = make(map[int]task)
-	c.ReducedTasks = make(map[int]task)
+	// c.InitedTasks = make(map[int]*TaskInfo)
+	// c.MappingTasks = make(map[int]*TaskInfo)
+	// c.MappedTasks = make(map[int]*TaskInfo)
+	// c.ReducingTasks = make(map[int]*TaskInfo)
+	// c.ReducedTasks = make(map[int]*TaskInfo)
 
 	c.workerColLock = sync.Mutex{}
 
-	for index, filename := range 	files {
-		c.InitedTasks[index] = task{
-			id: index,
-			fileLocation: filename,
+	c.mapTasks = make(map[int]*TaskInfo)
+	c.reduceTasks = make(map[int]*TaskInfo)
+
+	// create map tasks
+	for index, filename := range files {
+		c.mapTasks[index] = &TaskInfo{
+			Id: index,
+			FileLocations: []string{filename},
+			Status: Pending,
+			TaskType: Map,
+		}
+	}
+
+	// create reduce tasks
+	for i := 1; i < nReduce; i++ {
+		c.reduceTasks[i] = &TaskInfo{
+			Id: i,
+			FileLocations: []string{},
+			Status: Pending,
+			TaskType: Reduce,
 		}
 	}
 
 	c.heartBeatCheck()
 	
-	fmt.Println("111111111111", c.InitedTasks)
+	fmt.Println("111111111111", c.mapTasks, c.reduceTasks)
 
 
 	c.server()
