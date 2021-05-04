@@ -5,38 +5,16 @@ import (
 	"net"
 	"net/http"
 	"net/rpc"
+	"time"
 )
 
 //
 // Coordinator manages map/reduce tasks and workers
 //
 type Coordinator struct {
-	workerCol           map[int]worker
-	taskCol             map[int]task
+	workerCol           map[int]WorkerInfo
+	taskCol             map[int]TaskInfo
 	taskToWorkerMapping map[int]int
-}
-
-type WorkerStatus int
-
-const (
-	IdleWorker WorkerStatus = iota
-    MapWorker
-    ReduceWorker
-)
-
-func (ws WorkerStatus) String() string {
-    return [...]string{"Idle", "Map", "Reduce"}[ws]
-}
-
-type worker struct {
-	id             int
-	status         string
-	lastHeartBeart int
-}
-
-type task struct {
-	id     int
-	status string
 }
 
 //
@@ -46,14 +24,14 @@ func (c *Coordinator) ApplyForTask(request *TaskApplyReq, reply *TaskApplyRes) e
 	workerID := request.WorkerID
 
 	if _, ok := c.workerCol[workerID]; !ok {
-		c.workerCol[workerID] = worker{
-			id:     workerID,
-			status: IdleWorker.String(),
-			lastHeartBeart: time.Now().Unix()
+		c.workerCol[workerID] = WorkerInfo{
+			id:             workerID,
+			status:         IdleWorker.String(),
+			lastHeartBeart: time.Now().Unix(),
 		}
 	}
 
-	reply.TaskId = 100
+	// reply.TaskId = 100
 	return nil
 }
 
