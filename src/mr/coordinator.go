@@ -59,7 +59,11 @@ func (c *Coordinator) Done() bool {
 // MakeCoordinator create a Coordinator
 //
 func MakeCoordinator(files []string, nReduce int) *Coordinator {
-	c := Coordinator{}
+	c := Coordinator{
+		workerCol:           make(map[int]WorkerInfo),
+		taskCol:             make(map[int]TaskInfo),
+		taskToWorkerMapping: make(map[int]int),
+	}
 
 	// Your code here.
 
