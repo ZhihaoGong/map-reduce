@@ -6,6 +6,7 @@ import (
 
 type TaskStatus int
 
+// TODO: change visibility of this enum to this module
 const (
 	Pending TaskStatus = iota
 	Map
@@ -22,4 +23,11 @@ type TaskInfo struct {
 	status     string
 	taskStatus string
 	mutex      sync.Mutex
+}
+
+type TaskCol struct {
+	Pending map[int]WorkerInfo
+	Map     map[int]WorkerInfo
+	Reduce  map[int]WorkerInfo
+	Done    map[int]WorkerInfo
 }

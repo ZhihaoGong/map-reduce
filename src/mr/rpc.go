@@ -12,7 +12,7 @@ import (
 )
 
 type TaskApplyReq struct {
-	WorkerID int
+	WorkerId int
 }
 
 type TaskApplyRes struct {
@@ -21,7 +21,7 @@ type TaskApplyRes struct {
 }
 
 type StatusReportMsg struct {
-	WorkerID int
+	WorkerId int
 }
 
 type StatusReportAck struct {

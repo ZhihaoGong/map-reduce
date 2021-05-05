@@ -5,15 +5,14 @@ import (
 	"net"
 	"net/http"
 	"net/rpc"
-	"time"
 )
 
 //
 // Coordinator manages map/reduce tasks and workers
 //
 type Coordinator struct {
-	workerCol           map[int]WorkerInfo
-	taskCol             map[int]TaskInfo
+	workerCol           WorkerCol
+	taskCol             TaskCol
 	taskToWorkerMapping map[int]int
 }
 
@@ -21,17 +20,14 @@ type Coordinator struct {
 // ApplyForTask allocates a map/reduce task to worker
 //
 func (c *Coordinator) ApplyForTask(request *TaskApplyReq, reply *TaskApplyRes) error {
-	workerID := request.WorkerID
+	workerId := request.WorkerId
 
-	if _, ok := c.workerCol[workerID]; !ok {
-		c.workerCol[workerID] = WorkerInfo{
-			id:             workerID,
-			status:         IdleWorker.String(),
-			lastHeartBeart: time.Now().Unix(),
-		}
+	if c.workerCol.HasWorker(workerId) {
+		c.workerCol.RegisterWorker(workerId)
 	}
 
-	// reply.TaskId = 100
+	// Schedule pending task to idle worker
+
 	return nil
 }
 
@@ -60,8 +56,8 @@ func (c *Coordinator) Done() bool {
 //
 func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c := Coordinator{
-		workerCol:           make(map[int]WorkerInfo),
-		taskCol:             make(map[int]TaskInfo),
+		workerCol:           WorkerCol{},
+		taskCol:             TaskCol{},
 		taskToWorkerMapping: make(map[int]int),
 	}
 
