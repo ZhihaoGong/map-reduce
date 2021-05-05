@@ -8,32 +8,18 @@ type TaskStatus int
 
 const (
 	Pending TaskStatus = iota
-	Running
+	Map
+	Reduce
 	Done
 )
 
 func (ts TaskStatus) String() string {
-	return [...]string{"Pending", "Running", "Done"}[ts]
-}
-
-type TaskType int
-
-const (
-	Map TaskType = iota
-	Reduce
-)
-
-func (tt TaskType) String() string {
-	return [...]string{"Map", "Reduce"}[tt]
+	return [...]string{"Pending", "Map", "Reduce", "Done"}[ts]
 }
 
 type TaskInfo struct {
-	id       int
-	status   string
-	taskType string
-	mutex    sync.Mutex
-}
-
-func (ti *TaskInfo) SetTaskType(tType TaskType) {
-	ti.taskType = tType.String()
+	id         int
+	status     string
+	taskStatus string
+	mutex      sync.Mutex
 }
