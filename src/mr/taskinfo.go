@@ -26,8 +26,8 @@ type TaskInfo struct {
 }
 
 type TaskCol struct {
-	Pending map[int]WorkerInfo
-	Map     map[int]WorkerInfo
-	Reduce  map[int]WorkerInfo
-	Done    map[int]WorkerInfo
+	Pending map[int]TaskInfo
+	Map     map[int]TaskInfo
+	Reduce  map[int]TaskInfo
+	Done    map[int]TaskInfo
 }
