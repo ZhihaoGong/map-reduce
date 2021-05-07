@@ -1,6 +1,9 @@
 package mr
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type WorkerStatus int
 
@@ -36,14 +39,22 @@ func (wc WorkerCol) RegisterWorker(workerId int) {
 }
 
 func (wc WorkerCol) HasWorker(workerId int) bool {
-	if _, ok := wc.IdleWorker[workerId]; ok {
-		return true
-	}
-	if _, ok := wc.MapWorker[workerId]; ok {
-		return true
-	}
-	if _, ok := wc.ReduceWorker[workerId]; ok {
+	worker, err := wc.GetWorker(workerId)
+	if err == nil {
 		return true
 	}
 	return false
+}
+
+func (wc WorkerCol) GetWorker(workerId int) (WorkerInfo, error) {
+	if worker, ok := wc.IdleWorker[workerId]; ok {
+		return worker, nil
+	}
+	if worker, ok := wc.MapWorker[workerId]; ok {
+		return worker, nil
+	}
+	if worker, ok := wc.ReduceWorker[workerId]; ok {
+		return worker, nil
+	}
+	return WorkerInfo{}, errors.New("Specified workerId not found")
 }

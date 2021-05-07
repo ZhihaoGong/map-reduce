@@ -22,7 +22,12 @@ type TaskInfo struct {
 	id         int
 	status     string
 	taskStatus string
+	createTs   int
 	mutex      sync.Mutex
+}
+
+func (ti TaskInfo) CreateTs() int {
+	return ti.createTs
 }
 
 type TaskCol struct {
