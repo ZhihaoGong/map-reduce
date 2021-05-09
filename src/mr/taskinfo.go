@@ -19,11 +19,11 @@ func (ts TaskStatus) String() string {
 }
 
 type TaskInfo struct {
-	id         int
-	status     string
-	taskStatus string
-	createTs   int
-	mutex      sync.Mutex
+	id            int
+	status        TaskStatus
+	createTs      int
+	fileLocations []string
+	mutex         sync.Mutex
 }
 
 func (ti TaskInfo) CreateTs() int {

@@ -20,7 +20,7 @@ func (ws WorkerStatus) String() string {
 
 type WorkerInfo struct {
 	id             int
-	status         string
+	status         WorkerStatus
 	lastHeartBeart int64
 }
 
@@ -33,7 +33,7 @@ type WorkerCol struct {
 func (wc WorkerCol) RegisterWorker(workerId int) {
 	wc.IdleWorker[workerId] = WorkerInfo{
 		id:             workerId,
-		status:         IdleWorker.String(),
+		status:         IdleWorker,
 		lastHeartBeart: time.Now().Unix(),
 	}
 }
