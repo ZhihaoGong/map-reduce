@@ -13,12 +13,12 @@ import (
 
 type TaskApplyReq struct {
 	WorkerId int
+	DoneTask TaskData
 }
 
 type TaskApplyRes struct {
-	WorkerID int
-	TaskId   int
-	TaskType string
+	WorkerId int
+	Task TaskData
 }
 
 type StatusReportMsg struct {

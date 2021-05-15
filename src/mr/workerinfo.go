@@ -1,9 +1,9 @@
 package mr
 
-import (
-	"errors"
-	"time"
-)
+// import (
+// 	"errors"
+// 	"time"
+// )
 
 type WorkerStatus int
 
@@ -22,6 +22,7 @@ type WorkerInfo struct {
 	id             int
 	status         WorkerStatus
 	lastHeartBeart int64
+	curTaskId int
 }
 
 type WorkerCol struct {
@@ -30,31 +31,31 @@ type WorkerCol struct {
 	ReduceWorker map[int]WorkerInfo
 }
 
-func (wc WorkerCol) RegisterWorker(workerId int) {
-	wc.IdleWorker[workerId] = WorkerInfo{
-		id:             workerId,
-		status:         IdleWorker,
-		lastHeartBeart: time.Now().Unix(),
-	}
-}
+// func (wc WorkerCol) RegisterWorker(workerId int) {
+// 	wc.IdleWorker[workerId] = WorkerInfo{
+// 		id:             workerId,
+// 		status:         IdleWorker,
+// 		lastHeartBeart: time.Now().Unix(),
+// 	}
+// }
 
-func (wc WorkerCol) HasWorker(workerId int) bool {
-	worker, err := wc.GetWorker(workerId)
-	if err == nil {
-		return true
-	}
-	return false
-}
+// func (wc WorkerCol) HasWorker(workerId int) bool {
+// 	worker, err := wc.GetWorker(workerId)
+// 	if err == nil {
+// 		return true
+// 	}
+// 	return false
+// }
 
-func (wc WorkerCol) GetWorker(workerId int) (WorkerInfo, error) {
-	if worker, ok := wc.IdleWorker[workerId]; ok {
-		return worker, nil
-	}
-	if worker, ok := wc.MapWorker[workerId]; ok {
-		return worker, nil
-	}
-	if worker, ok := wc.ReduceWorker[workerId]; ok {
-		return worker, nil
-	}
-	return WorkerInfo{}, errors.New("Specified workerId not found")
-}
+// func (wc WorkerCol) GetWorker(workerId int) (WorkerInfo, error) {
+// 	if worker, ok := wc.IdleWorker[workerId]; ok {
+// 		return worker, nil
+// 	}
+// 	if worker, ok := wc.MapWorker[workerId]; ok {
+// 		return worker, nil
+// 	}
+// 	if worker, ok := wc.ReduceWorker[workerId]; ok {
+// 		return worker, nil
+// 	}
+// 	return WorkerInfo{}, errors.New("Specified workerId not found")
+// }

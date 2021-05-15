@@ -9,6 +9,7 @@ import (
 )
 
 var workerID int = -1
+var task TaskData = EmptyTaskData
 
 //
 // Map functions return a slice of KeyValue.
@@ -36,25 +37,47 @@ func Worker(mapf func(string, string) []KeyValue,
 
 	for true {
 		fmt.Println("Infinite Loop")
-		applyTask()
+		isDone := applyTask()
+		if isDone {
+			return
+		}
 		time.Sleep(time.Second)
 	}
 
 }
 
-func applyTask() {
+func applyTask() (isDone bool) {
+	isDone = false
 	resquest := TaskApplyReq{
-		WorkerID: workerID,
+		WorkerId: workerID,
+		DoneTask: task,
 	}
 	reply := TaskApplyRes{}
 
 	call("Coordinator.ApplyForTask", &resquest, &reply)
-	if workerID == -1 {
-		workerID = reply.WorkerID
+	workerID = reply.WorkerId
+	task := reply.Task
+	fmt.Printf("reply.taskId %v taskType %v\n", task.Id, task.TaskType)
+	
+	switch task.TaskType {
+	case DoneTask:
+		isDone = true 
+	case MapTask:
+		doMap(&task)
+	case ReduceTask:
+		doReduce(&task)
+	default:
 	}
+	return 
+}
 
-	// reply.Y should be 100.
-	fmt.Printf("reply.taskId %v\n", reply.TaskId)
+func doMap(task *TaskData) {
+	time.Sleep(time.Second*11)
+	fmt.Println("doMap ", task.Id, task.TaskType, task.FileLocations)
+}
+
+func doReduce(task *TaskData) {
+	fmt.Println("doReduce ", task.Id, task.TaskType, task.FileLocations)
 }
 
 //
