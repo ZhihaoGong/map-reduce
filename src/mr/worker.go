@@ -44,7 +44,7 @@ func Worker(mapf func(string, string) []KeyValue,
 
 func applyTask() {
 	resquest := TaskApplyReq{
-		WorkerID: workerID,
+		WorkerId: workerID,
 	}
 	reply := TaskApplyRes{}
 

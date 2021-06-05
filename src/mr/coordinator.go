@@ -14,6 +14,7 @@ type Coordinator struct {
 	workerCol           WorkerCol
 	taskCol             TaskCol
 	taskToWorkerMapping map[int]int
+	scheduler           Scheduler
 }
 
 //
@@ -24,10 +25,12 @@ func (c *Coordinator) ApplyForTask(request *TaskApplyReq, reply *TaskApplyRes) e
 
 	if c.workerCol.HasWorker(workerId) {
 		c.workerCol.RegisterWorker(workerId)
+	} else {
+		// Renew worker heartbeart
+		c.workerCol.RenewHeartBeat(workerId)
 	}
 
 	// Schedule pending task to idle worker
-
 	return nil
 }
 
