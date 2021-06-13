@@ -16,7 +16,7 @@ type TaskApplyReq struct {
 }
 
 type TaskApplyRes struct {
-	WorkerID int
+	WorkerId int
 	TaskId   int
 	TaskType string
 }

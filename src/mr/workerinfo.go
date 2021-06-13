@@ -2,6 +2,7 @@ package mr
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 )
@@ -26,12 +27,14 @@ type WorkerInfo struct {
 }
 
 type WorkerCol struct {
-	Workers map[int]WorkerInfo
+	workers               map[int]WorkerInfo
+	disconnestedThedshold int64
+	nextWorkerId          int
 }
 
 func (wc WorkerCol) RegisterWorker(workerId int) {
 	// TODO: assert workerId not in the collection
-	wc.Workers[workerId] = WorkerInfo{
+	wc.workers[workerId] = WorkerInfo{
 		id:             workerId,
 		status:         IdleWorker,
 		lastHeartBeart: time.Now().Unix(),
@@ -40,8 +43,8 @@ func (wc WorkerCol) RegisterWorker(workerId int) {
 
 func (wc WorkerCol) UnregisterWorker(workerId int) {
 	// TODO: assert workerId in the collection
-	if _, ok := wc.Workers[workerId]; ok {
-		delete(wc.Workers, workerId)
+	if _, ok := wc.workers[workerId]; ok {
+		delete(wc.workers, workerId)
 		return
 	}
 	panic("WorkerId " + strconv.Itoa(workerId) + " not registered.")
@@ -56,7 +59,7 @@ func (wc WorkerCol) HasWorker(workerId int) bool {
 }
 
 func (wc WorkerCol) GetWorker(workerId int) (WorkerInfo, error) {
-	if worker, ok := wc.Workers[workerId]; ok {
+	if worker, ok := wc.workers[workerId]; ok {
 		return worker, nil
 	}
 	return WorkerInfo{}, errors.New("Specified workerId not found")
@@ -70,11 +73,19 @@ func (wc WorkerCol) RenewHeartBeat(workerId int) {
 	worker.lastHeartBeart = time.Now().Unix()
 }
 
-func (wc WorkerCol) CleanDisconnectedWorker(timeoutThedshold int64) {
+func (wc WorkerCol) CleanDisconnectedWorker() {
 	now := time.Now().Unix()
-	for wid, info := range wc.Workers {
-		if info.lastHeartBeart < now-timeoutThedshold {
+
+	fmt.Printf("cleaning disconnected worker\n")
+
+	for wid, info := range wc.workers {
+		if info.lastHeartBeart < now-wc.disconnestedThedshold {
 			wc.UnregisterWorker(wid)
 		}
 	}
+}
+
+func (wc WorkerCol) GetNextWorkerId() int {
+	wc.nextWorkerId++
+	return wc.nextWorkerId
 }

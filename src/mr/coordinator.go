@@ -5,7 +5,6 @@ import (
 	"net"
 	"net/http"
 	"net/rpc"
-	"strconv"
 	"time"
 )
 
@@ -24,20 +23,18 @@ type Coordinator struct {
 //
 func (c *Coordinator) ApplyForTask(request *TaskApplyReq, reply *TaskApplyRes) error {
 	workerId := request.WorkerId
-
 	if !c.workerCol.HasWorker(workerId) {
+		// Update workerId to a valid one
+		workerId = c.workerCol.GetNextWorkerId()
 		c.workerCol.RegisterWorker(workerId)
 	} else {
 		c.workerCol.RenewHeartBeat(workerId)
 	}
 
-	worker, err := c.workerCol.GetWorker(workerId)
-	if err != nil {
-		panic("Workerid " + strconv.Itoa(workerId) + " is not registered.")
-	}
+	reply.WorkerId = workerId
 
+	// _, _  := c.workerCol.GetWorker(workerId)
 	// reply.
-
 	// Schedule pending task to idle worker
 
 	return nil
@@ -65,7 +62,7 @@ func (c *Coordinator) Done() bool {
 
 func (c *Coordinator) CleanDisconnectedWorker() {
 	for {
-		c.CleanDisconnectedWorker()
+		c.workerCol.CleanDisconnectedWorker()
 		time.Sleep(time.Second)
 	}
 }
@@ -75,10 +72,20 @@ func (c *Coordinator) CleanDisconnectedWorker() {
 //
 func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c := Coordinator{
-		workerCol:           WorkerCol{},
-		taskCol:             TaskCol{},
 		taskToWorkerMapping: make(map[int]int),
 		scheduler:           RandomScheduler{},
+	}
+
+	c.workerCol = WorkerCol{
+		workers:               make(map[int]WorkerInfo),
+		disconnestedThedshold: 10,
+	}
+
+	c.taskCol = TaskCol{
+		Pending: make(map[int]TaskInfo),
+		Map:     make(map[int]TaskInfo),
+		Reduce:  make(map[int]TaskInfo),
+		Done:    make(map[int]TaskInfo),
 	}
 
 	go c.CleanDisconnectedWorker()
