@@ -5,6 +5,8 @@ import (
 	"net"
 	"net/http"
 	"net/rpc"
+	"strconv"
+	"time"
 )
 
 //
@@ -23,14 +25,21 @@ type Coordinator struct {
 func (c *Coordinator) ApplyForTask(request *TaskApplyReq, reply *TaskApplyRes) error {
 	workerId := request.WorkerId
 
-	if c.workerCol.HasWorker(workerId) {
+	if !c.workerCol.HasWorker(workerId) {
 		c.workerCol.RegisterWorker(workerId)
 	} else {
-		// Renew worker heartbeart
 		c.workerCol.RenewHeartBeat(workerId)
 	}
 
+	worker, err := c.workerCol.GetWorker(workerId)
+	if err != nil {
+		panic("Workerid " + strconv.Itoa(workerId) + " is not registered.")
+	}
+
+	// reply.
+
 	// Schedule pending task to idle worker
+
 	return nil
 }
 
@@ -54,6 +63,13 @@ func (c *Coordinator) Done() bool {
 	return ret
 }
 
+func (c *Coordinator) CleanDisconnectedWorker() {
+	for {
+		c.CleanDisconnectedWorker()
+		time.Sleep(time.Second)
+	}
+}
+
 //
 // MakeCoordinator create a Coordinator
 //
@@ -62,9 +78,10 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 		workerCol:           WorkerCol{},
 		taskCol:             TaskCol{},
 		taskToWorkerMapping: make(map[int]int),
+		scheduler:           RandomScheduler{},
 	}
 
-	// Your code here.
+	go c.CleanDisconnectedWorker()
 
 	c.server()
 	return &c

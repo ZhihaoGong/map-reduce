@@ -26,14 +26,12 @@ type WorkerInfo struct {
 }
 
 type WorkerCol struct {
-	IdleWorker   map[int]WorkerInfo
-	MapWorker    map[int]WorkerInfo
-	ReduceWorker map[int]WorkerInfo
+	Workers map[int]WorkerInfo
 }
 
 func (wc WorkerCol) RegisterWorker(workerId int) {
 	// TODO: assert workerId not in the collection
-	wc.IdleWorker[workerId] = WorkerInfo{
+	wc.Workers[workerId] = WorkerInfo{
 		id:             workerId,
 		status:         IdleWorker,
 		lastHeartBeart: time.Now().Unix(),
@@ -42,16 +40,8 @@ func (wc WorkerCol) RegisterWorker(workerId int) {
 
 func (wc WorkerCol) UnregisterWorker(workerId int) {
 	// TODO: assert workerId in the collection
-	if _, ok := wc.IdleWorker[workerId]; ok {
-		delete(wc.IdleWorker, workerId)
-		return
-	}
-	if _, ok := wc.MapWorker[workerId]; ok {
-		delete(wc.MapWorker, workerId)
-		return
-	}
-	if _, ok := wc.ReduceWorker[workerId]; ok {
-		delete(wc.ReduceWorker, workerId)
+	if _, ok := wc.Workers[workerId]; ok {
+		delete(wc.Workers, workerId)
 		return
 	}
 	panic("WorkerId " + strconv.Itoa(workerId) + " not registered.")
@@ -66,13 +56,7 @@ func (wc WorkerCol) HasWorker(workerId int) bool {
 }
 
 func (wc WorkerCol) GetWorker(workerId int) (WorkerInfo, error) {
-	if worker, ok := wc.IdleWorker[workerId]; ok {
-		return worker, nil
-	}
-	if worker, ok := wc.MapWorker[workerId]; ok {
-		return worker, nil
-	}
-	if worker, ok := wc.ReduceWorker[workerId]; ok {
+	if worker, ok := wc.Workers[workerId]; ok {
 		return worker, nil
 	}
 	return WorkerInfo{}, errors.New("Specified workerId not found")
@@ -84,4 +68,13 @@ func (wc WorkerCol) RenewHeartBeat(workerId int) {
 		panic("Failed to renew workerId " + strconv.Itoa(workerId) + " that not exists.")
 	}
 	worker.lastHeartBeart = time.Now().Unix()
+}
+
+func (wc WorkerCol) CleanDisconnectedWorker(timeoutThedshold int64) {
+	now := time.Now().Unix()
+	for wid, info := range wc.Workers {
+		if info.lastHeartBeart < now-timeoutThedshold {
+			wc.UnregisterWorker(wid)
+		}
+	}
 }
